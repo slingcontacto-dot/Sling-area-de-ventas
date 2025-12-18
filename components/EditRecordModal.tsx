@@ -1,0 +1,124 @@
+import React, { useState, useEffect } from 'react';
+import { SalesRecord, SoldStatus } from '../types';
+import { X, Save } from 'lucide-react';
+
+interface EditRecordModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  record: SalesRecord | null;
+  onSave: (record: SalesRecord) => void;
+}
+
+export const EditRecordModal: React.FC<EditRecordModalProps> = ({ isOpen, onClose, record, onSave }) => {
+  const [formData, setFormData] = useState<SalesRecord | null>(null);
+
+  useEffect(() => {
+    if (record) {
+      setFormData({ ...record });
+    }
+  }, [record]);
+
+  if (!isOpen || !formData) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData) {
+      onSave(formData);
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
+          <h3 className="text-lg font-bold text-gray-800">Editar Registro</h3>
+          <button 
+            onClick={onClose}
+            className="p-1 rounded-full hover:bg-gray-200 text-gray-500 transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Empresa</label>
+                <input
+                    type="text"
+                    required
+                    value={formData.company}
+                    onChange={(e) => setFormData({...formData, company: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+            </div>
+            <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Rubro</label>
+                <input
+                    type="text"
+                    required
+                    value={formData.industry}
+                    onChange={(e) => setFormData({...formData, industry: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Dirección</label>
+            <input
+                type="text"
+                required
+                value={formData.address}
+                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+             <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Estado de Venta</label>
+                <select
+                    value={formData.sold}
+                    onChange={(e) => setFormData({...formData, sold: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                >
+                    <option value={SoldStatus.INTERESADO}>{SoldStatus.INTERESADO}</option>
+                    <option value={SoldStatus.SI}>Vendido (Si)</option>
+                    <option value={SoldStatus.NO}>Rechazado (No)</option>
+                    <option value={SoldStatus.PENDIENTE}>Volver a pasar</option>
+                </select>
+             </div>
+             <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Contacto</label>
+                <input
+                    type="text"
+                    value={formData.contactInfo}
+                    onChange={(e) => setFormData({...formData, contactInfo: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+             </div>
+          </div>
+
+          <div className="pt-4 flex justify-end gap-3">
+            <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+                Cancelar
+            </button>
+            <button
+                type="submit"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+                <Save size={16} />
+                Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};

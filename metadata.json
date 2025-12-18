@@ -1,0 +1,5 @@
+{
+  "name": "Registro de visitas Sling",
+  "description": "A collaborative sales tracking dashboard with role-based access for owners and employees.",
+  "requestFramePermissions": []
+}
