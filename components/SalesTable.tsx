@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SalesRecord, SoldStatus, User } from '../types';
-import { Table, Search, Edit2, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Filter } from 'lucide-react';
+import { Table, Search, Edit2, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Filter, MessageCircle } from 'lucide-react';
 
 interface SalesTableProps {
   records: SalesRecord[];
@@ -20,9 +20,20 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
     direction: 'desc',
   });
 
-  // Permissions logic
+  // Permissions logic for Edit/Delete
   const canModify = (record: SalesRecord) => {
     return currentUser.role === 'owner' || record.inCharge === currentUser.username;
+  };
+
+  // WhatsApp Link Helper
+  const openWhatsApp = (contactInfo: string) => {
+    // Eliminar todo lo que no sea número
+    const cleanNumber = contactInfo.replace(/\D/g, '');
+    if (cleanNumber.length > 0) {
+      window.open(`https://wa.me/${cleanNumber}`, '_blank');
+    } else {
+      alert('No se detectó un número válido para WhatsApp en este registro.');
+    }
   };
 
   // Parsing helper for DD/MM/YYYY
@@ -167,6 +178,8 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
             {filteredRecords.length > 0 ? (
                 filteredRecords.map((record) => {
                   const allowed = canModify(record);
+                  const isPhoneNumber = record.contactInfo && /\d/.test(record.contactInfo);
+
                   return (
                     <tr key={record.id} className="hover:bg-gray-50 transition-colors group">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{record.date}</td>
@@ -188,20 +201,34 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.contactInfo}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                           {allowed && (
-                               <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <div className="flex items-center justify-end gap-2">
+                               {/* WhatsApp Button - Always Visible if there are numbers */}
+                               {isPhoneNumber && (
                                    <button 
-                                     onClick={() => onEdit(record)}
-                                     className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar">
-                                       <Edit2 size={16} />
+                                     onClick={() => openWhatsApp(record.contactInfo)}
+                                     className="p-1.5 bg-[#25D366] text-white rounded-lg hover:bg-[#20ba5a] transition-colors shadow-sm" 
+                                     title="Enviar WhatsApp"
+                                   >
+                                       <MessageCircle size={16} fill="white" />
                                    </button>
-                                   <button 
-                                     onClick={() => onDelete(record.id)}
-                                     className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Eliminar">
-                                       <Trash2 size={16} />
-                                   </button>
-                               </div>
-                           )}
+                               )}
+
+                               {/* Edit/Delete Buttons - Visible on hover for owners/assigned users */}
+                               {allowed && (
+                                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                       <button 
+                                         onClick={() => onEdit(record)}
+                                         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar">
+                                           <Edit2 size={16} />
+                                       </button>
+                                       <button 
+                                         onClick={() => onDelete(record.id)}
+                                         className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Eliminar">
+                                           <Trash2 size={16} />
+                                       </button>
+                                   </div>
+                               )}
+                           </div>
                         </td>
                     </tr>
                   );

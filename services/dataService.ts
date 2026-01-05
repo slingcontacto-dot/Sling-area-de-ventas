@@ -203,21 +203,27 @@ export const dataService = {
   getStats: async (): Promise<SalesStat[]> => {
     const allRecords = await dataService.getAllRecords();
     
-    // We need all users to initialize 0 counts
+    // Obtenemos SOLO los usuarios registrados actualmente
     const { data: usersData } = await supabase.from('app_users').select('username');
-    const statsMap: Record<string, number> = {};
     
+    const statsMap: Record<string, number> = {};
+    const validUsernames = new Set<string>();
+
+    // Inicializamos el mapa solo con los usuarios registrados
     if (usersData) {
       usersData.forEach((u: any) => {
         statsMap[u.username] = 0;
+        validUsernames.add(u.username);
       });
     }
 
+    // Contamos registros solo si el usuario sigue existiendo en el sistema
     allRecords.forEach(r => {
-      if (typeof statsMap[r.inCharge] === 'undefined') {
-        statsMap[r.inCharge] = 0;
+      // Si el encargado está en la lista de usuarios válidos, sumamos
+      if (validUsernames.has(r.inCharge)) {
+        statsMap[r.inCharge]++;
       }
-      statsMap[r.inCharge]++;
+      // Si el encargado fue eliminado, ignoramos sus registros antiguos para la estadística
     });
 
     return Object.entries(statsMap).map(([name, count]) => {

@@ -12,6 +12,27 @@
         font-family: 'Inter', sans-serif;
         background-color: #f3f4f6;
       }
+      @keyframes bounce-short {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+      .animate-bounce-short {
+        animation: bounce-short 2s ease-in-out infinite;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .animate-fade-in-up {
+        animation: fadeInUp 0.4s ease-out;
+      }
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
     </style>
   <script type="importmap">
 {

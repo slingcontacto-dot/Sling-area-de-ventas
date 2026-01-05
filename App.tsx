@@ -8,8 +8,7 @@ import { SalesTable } from './components/SalesTable';
 import { StatsView } from './components/StatsView';
 import { EditRecordModal } from './components/EditRecordModal';
 import { UserManagement } from './components/UserManagement';
-import { LogOut, LayoutDashboard, PlusCircle, PieChart, Users, Database, Archive, Download, FileSpreadsheet, Loader2, Wifi, WifiOff } from 'lucide-react';
-import { SUPABASE_URL } from './services/supabaseClient';
+import { LogOut, LayoutDashboard, PlusCircle, PieChart, Users, Database, Archive, Download, FileSpreadsheet, Loader2, Wifi, WifiOff, Trophy, Star, Check } from 'lucide-react';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -23,6 +22,10 @@ function App() {
   // Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [recordToEdit, setRecordToEdit] = useState<SalesRecord | null>(null);
+  
+  // Recognition Modal State
+  const [showTopUserModal, setShowTopUserModal] = useState(false);
+  const [hasAcknowledgedTopStatus, setHasAcknowledgedTopStatus] = useState(false);
 
   // Initialize Services on mount
   useEffect(() => {
@@ -42,12 +45,12 @@ function App() {
   // Fetch data whenever user changes AND setup Realtime Subscription
   useEffect(() => {
     if (user) {
-      refreshData();
+      refreshData(true);
 
       // Configurar escucha en Tiempo Real
       const channel = dataService.subscribeToChanges(() => {
         // Cuando hay un cambio en la base de datos, refrescamos los datos locales
-        refreshData();
+        refreshData(false);
       });
 
       // Limpiar suscripción al desmontar o cambiar usuario
@@ -57,13 +60,21 @@ function App() {
     }
   }, [user]);
 
-  const refreshData = async () => {
+  const refreshData = async (initialLoad = false) => {
     if (!user) return;
     try {
         const fetchedRecords = await dataService.getRecordsForUser(user);
         setRecords(fetchedRecords);
         const fetchedStats = await dataService.getStats();
         setStats(fetchedStats);
+
+        // Check if user is top performer on initial load
+        if (initialLoad && !hasAcknowledgedTopStatus && fetchedStats.length > 0) {
+            const topPerformer = [...fetchedStats].sort((a, b) => b.salesCount - a.salesCount)[0];
+            if (topPerformer && topPerformer.name === user.username && topPerformer.salesCount > 0) {
+                setShowTopUserModal(true);
+            }
+        }
     } catch (e) {
         console.error(e);
     }
@@ -71,12 +82,14 @@ function App() {
 
   const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser);
+    setHasAcknowledgedTopStatus(false);
     setActiveTab('list'); // Default view
   };
 
   const handleLogout = () => {
     setUser(null);
     setRecords([]);
+    setHasAcknowledgedTopStatus(false);
   };
 
   const handleSaveRecord = async (newRecord: Omit<SalesRecord, 'id'>) => {
@@ -86,7 +99,7 @@ function App() {
     }
     await dataService.addRecord(newRecord);
     // Refresh is now handled by Realtime, but calling it here ensures immediate UI feedback for the doer
-    await refreshData();
+    await refreshData(false);
   };
 
   // Delete Action
@@ -144,6 +157,45 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans text-gray-900 flex flex-col">
+      {/* Recognition Modal for Top User */}
+      {showTopUserModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-blue-900/90 backdrop-blur-md p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform animate-bounce-short">
+             <div className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 p-8 text-center relative overflow-hidden">
+                <div className="absolute inset-0 opacity-20 pointer-events-none">
+                    <div className="flex flex-wrap gap-4 justify-center py-4">
+                        {[...Array(10)].map((_, i) => <Star key={i} size={24} className="text-white" />)}
+                    </div>
+                </div>
+                <div className="bg-white/30 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm border-2 border-white/50">
+                    <Trophy className="w-12 h-12 text-white drop-shadow-lg" />
+                </div>
+                <h2 className="text-3xl font-black text-white uppercase tracking-tighter drop-shadow-md">
+                    ¡Eres el mejor!
+                </h2>
+                <p className="text-white/90 font-medium mt-2">
+                    Nadie ha cargado más registros que tú.
+                </p>
+             </div>
+             <div className="p-8 text-center">
+                <p className="text-gray-600 mb-6 text-lg">
+                    Hola <strong>{user.username}</strong>, hoy entras como el líder indiscutido del equipo. Tu esfuerzo es un ejemplo para todos en Sling.
+                </p>
+                <button 
+                  onClick={() => {
+                      setShowTopUserModal(false);
+                      setHasAcknowledgedTopStatus(true);
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                    <Check size={20} />
+                    ¡Aceptar y Seguir Ganando!
+                </button>
+             </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
