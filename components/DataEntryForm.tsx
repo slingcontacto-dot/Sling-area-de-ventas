@@ -1,17 +1,21 @@
+
 import React, { useState } from 'react';
 import { User, SalesRecord, SoldStatus } from '../types';
 import { dataService } from '../services/dataService';
-import { Save, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { Save, CheckCircle2, AlertTriangle, Loader2, Plus } from 'lucide-react';
 
 interface DataEntryFormProps {
   currentUser: User;
   onSave: (record: Omit<SalesRecord, 'id'>) => void;
 }
 
+const PREDEFINED_RUBROS = ['ROPA', 'COMIDA', 'CONSULTORIO', 'CANCHAS', 'TECNOLOGIA', 'PELUQUERIA'];
+
 export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSave }) => {
   const [address, setAddress] = useState('');
   const [company, setCompany] = useState('');
-  const [industry, setIndustry] = useState('');
+  const [selectedRubro, setSelectedRubro] = useState('');
+  const [customRubro, setCustomRubro] = useState('');
   const [sold, setSold] = useState<SoldStatus>(SoldStatus.INTERESADO);
   const [contactInfo, setContactInfo] = useState('');
   const [contacted, setContacted] = useState<'Si' | 'No'>('No');
@@ -30,6 +34,13 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
     setIsValidating(true);
 
     const finalContact = contactInfo.trim();
+    const finalRubro = selectedRubro === 'OTRA' ? customRubro.trim() : selectedRubro;
+
+    if (!finalRubro) {
+        alert('Por favor selecciona o escribe un rubro.');
+        setIsValidating(false);
+        return;
+    }
 
     try {
         const existingOwner = await dataService.checkDuplicate(company, finalContact);
@@ -45,7 +56,7 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
             inCharge: currentUser.username,
             address,
             company,
-            industry,
+            industry: finalRubro,
             sold,
             contactInfo: finalContact,
             contacted
@@ -53,9 +64,11 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
 
         onSave(newRecord);
 
+        // Reset
         setAddress('');
         setCompany('');
-        setIndustry('');
+        setSelectedRubro('');
+        setCustomRubro('');
         setSold(SoldStatus.INTERESADO);
         setContactInfo('');
         setContacted('No');
@@ -154,14 +167,34 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
 
             <div className="space-y-1">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Rubro o Actividad</label>
-                <input
-                    type="text"
-                    required
-                    value={industry}
-                    onChange={(e) => setIndustry(e.target.value)}
-                    className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all font-bold text-gray-800"
-                    placeholder="Ej. Kiosco, Taller, etc."
-                />
+                <div className="space-y-2">
+                    <select
+                        required
+                        value={selectedRubro}
+                        onChange={(e) => setSelectedRubro(e.target.value)}
+                        className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white font-bold text-gray-800 appearance-none"
+                    >
+                        <option value="">Seleccionar Rubro...</option>
+                        {PREDEFINED_RUBROS.map(rubro => (
+                            <option key={rubro} value={rubro}>{rubro}</option>
+                        ))}
+                        <option value="OTRA">OTRA (Escribir nueva...)</option>
+                    </select>
+                    
+                    {selectedRubro === 'OTRA' && (
+                        <div className="animate-fade-in">
+                            <input
+                                type="text"
+                                required
+                                value={customRubro}
+                                onChange={(e) => setCustomRubro(e.target.value.toUpperCase())}
+                                className="w-full p-3.5 border border-blue-300 bg-blue-50 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all font-black text-blue-900 placeholder-blue-300"
+                                placeholder="Escribe el nuevo rubro aquí..."
+                                autoFocus
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="space-y-1">
