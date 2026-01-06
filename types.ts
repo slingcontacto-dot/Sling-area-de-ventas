@@ -22,6 +22,7 @@ export interface SalesRecord {
   industry: string; // Rubro
   sold: SoldStatus | string;
   contactInfo: string; // Numero/IG
+  contacted: 'Si' | 'No'; // New field
 }
 
 export interface SalesStat {

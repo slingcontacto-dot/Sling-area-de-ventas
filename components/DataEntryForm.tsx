@@ -14,6 +14,7 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
   const [industry, setIndustry] = useState('');
   const [sold, setSold] = useState<SoldStatus>(SoldStatus.INTERESADO);
   const [contactInfo, setContactInfo] = useState('');
+  const [contacted, setContacted] = useState<'Si' | 'No'>('No');
   
   const [successMsg, setSuccessMsg] = useState('');
   const [duplicateError, setDuplicateError] = useState<{ exists: boolean; owner: string | null }>({
@@ -46,7 +47,8 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
             company,
             industry,
             sold,
-            contactInfo: finalContact
+            contactInfo: finalContact,
+            contacted
         };
 
         onSave(newRecord);
@@ -56,6 +58,7 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
         setIndustry('');
         setSold(SoldStatus.INTERESADO);
         setContactInfo('');
+        setContacted('No');
         setSuccessMsg('Registro guardado exitosamente');
 
         setTimeout(() => setSuccessMsg(''), 3000);
@@ -190,6 +193,34 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
                     <option value={SoldStatus.NO}>Rechazado (No)</option>
                     <option value={SoldStatus.PENDIENTE}>Volver a pasar</option>
                 </select>
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">¿Contactado?</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setContacted('Si')}
+                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all font-bold ${
+                      contacted === 'Si' 
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg' 
+                        : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    Sí
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setContacted('No')}
+                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all font-bold ${
+                      contacted === 'No' 
+                        ? 'bg-slate-800 border-slate-800 text-white shadow-lg' 
+                        : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    No
+                  </button>
+                </div>
             </div>
         </div>
 

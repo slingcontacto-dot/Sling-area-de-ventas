@@ -70,7 +70,8 @@ export const dataService = {
       company: row.company,
       industry: row.industry,
       sold: row.sold,
-      contactInfo: row.contact_info
+      contactInfo: row.contact_info,
+      contacted: row.contacted || 'No'
     }));
   },
 
@@ -99,7 +100,8 @@ export const dataService = {
       company: row.company,
       industry: row.industry,
       sold: row.sold,
-      contactInfo: row.contact_info
+      contactInfo: row.contact_info,
+      contacted: row.contacted || 'No'
     }));
   },
 
@@ -114,7 +116,8 @@ export const dataService = {
       company: record.company,
       industry: record.industry,
       sold: record.sold,
-      contact_info: record.contactInfo
+      contact_info: record.contactInfo,
+      contacted: record.contacted
     };
 
     const { data, error } = await supabase
@@ -136,7 +139,8 @@ export const dataService = {
       company: data.company,
       industry: data.industry,
       sold: data.sold,
-      contactInfo: data.contact_info
+      contactInfo: data.contact_info,
+      contacted: data.contacted
     };
   },
 
@@ -149,7 +153,8 @@ export const dataService = {
       industry: updatedRecord.industry,
       address: updatedRecord.address,
       sold: updatedRecord.sold,
-      contact_info: updatedRecord.contactInfo
+      contact_info: updatedRecord.contactInfo,
+      contacted: updatedRecord.contacted
     };
 
     await supabase
@@ -182,7 +187,7 @@ export const dataService = {
    * Convert records to CSV format
    */
   convertToCSV: (records: SalesRecord[]): string => {
-    const headers = ['Fecha', 'Encargado', 'Dirección', 'Empresa', 'Rubro', 'Vendido', 'Contacto'];
+    const headers = ['Fecha', 'Encargado', 'Dirección', 'Empresa', 'Rubro', 'Vendido', 'Contacto', 'Contactado'];
     const rows = records.map(r => [
       r.date,
       r.inCharge,
@@ -190,7 +195,8 @@ export const dataService = {
       `"${r.company}"`,
       r.industry,
       r.sold,
-      `"${r.contactInfo}"`
+      `"${r.contactInfo}"`,
+      r.contacted
     ]);
 
     const csvContent = [

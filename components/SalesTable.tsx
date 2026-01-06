@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SalesRecord, SoldStatus, User } from '../types';
-import { Table, Search, Edit2, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Filter, MessageCircle } from 'lucide-react';
+import { dataService } from '../services/dataService';
+import { Table, Search, Edit2, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Filter, MessageCircle, Check, X } from 'lucide-react';
 
 interface SalesTableProps {
   records: SalesRecord[];
@@ -22,6 +23,13 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
 
   const canModify = (record: SalesRecord) => {
     return currentUser.role === 'owner' || record.inCharge === currentUser.username;
+  };
+
+  const toggleContacted = async (record: SalesRecord) => {
+    if (!canModify(record)) return;
+    const newStatus = record.contacted === 'Si' ? 'No' : 'Si';
+    await dataService.updateRecord({ ...record, contacted: newStatus });
+    // Note: The parent App component should handle the data refresh via the realtime subscription or onUpdate.
   };
 
   /**
@@ -160,6 +168,7 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dirección</th>
               <th scope="col" onClick={() => handleSort('sold')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">Estado {renderSortIcon('sold')}</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacto</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Contactado</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
@@ -183,6 +192,20 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">{record.address}</td>
                         <td className="px-6 py-4 whitespace-nowrap"><span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusColor(record.sold)}`}>{record.sold}</span></td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.contactInfo}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <button
+                                onClick={() => toggleContacted(record)}
+                                disabled={!allowed}
+                                className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border transition-all ${
+                                    record.contacted === 'Si'
+                                    ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                                    : 'bg-gray-50 border-gray-200 text-gray-300 hover:border-blue-400 hover:text-blue-400'
+                                }`}
+                                title={record.contacted === 'Si' ? 'Marcar como NO contactado' : 'Marcar como SI contactado'}
+                            >
+                                {record.contacted === 'Si' ? <Check size={16} strokeWidth={3} /> : <X size={14} strokeWidth={3} />}
+                            </button>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                            <div className="flex items-center justify-end gap-2">
                                {isPhoneNumber && (
@@ -202,7 +225,7 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
                   );
                 })
             ) : (
-                <tr><td colSpan={8} className="px-6 py-10 text-center text-gray-500">No hay registros.</td></tr>
+                <tr><td colSpan={9} className="px-6 py-10 text-center text-gray-500">No hay registros.</td></tr>
             )}
           </tbody>
         </table>

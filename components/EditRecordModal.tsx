@@ -101,6 +101,34 @@ export const EditRecordModal: React.FC<EditRecordModalProps> = ({ isOpen, onClos
              </div>
           </div>
 
+          <div>
+             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">¿Contactado?</label>
+             <div className="flex gap-2">
+                <button
+                    type="button"
+                    onClick={() => setFormData({...formData, contacted: 'Si'})}
+                    className={`flex-1 py-2 rounded-lg border font-bold transition-all ${
+                        formData.contacted === 'Si'
+                        ? 'bg-blue-600 border-blue-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-600'
+                    }`}
+                >
+                    Sí
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setFormData({...formData, contacted: 'No'})}
+                    className={`flex-1 py-2 rounded-lg border font-bold transition-all ${
+                        formData.contacted === 'No'
+                        ? 'bg-slate-800 border-slate-800 text-white'
+                        : 'bg-white border-gray-300 text-gray-600'
+                    }`}
+                >
+                    No
+                </button>
+             </div>
+          </div>
+
           <div className="pt-4 flex justify-end gap-3">
             <button
                 type="button"
