@@ -1,18 +1,12 @@
 import React, { useMemo } from 'react';
 import { SalesStat } from '../types';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { BarChart3, TrendingUp, HelpCircle, Trophy, Sparkles, Star } from 'lucide-react';
+import { TrendingUp, HelpCircle, Trophy, Sparkles, Star, Medal, Target, Award } from 'lucide-react';
 
 interface StatsViewProps {
   stats: SalesStat[];
 }
 
 export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
-  const COLORS = [
-    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', 
-    '#ec4899', '#06b6d4', '#84cc16', '#6366f1', '#d946ef'
-  ];
-
   const TIERS = [
     { range: '0', percentage: '0%' },
     { range: '1 - 4', percentage: '10%' },
@@ -21,150 +15,188 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
     { range: '15 o más', percentage: '25%' },
   ];
 
-  // Identificar al líder absoluto
-  const topPerformer = useMemo(() => {
-    if (stats.length === 0) return null;
-    return [...stats].sort((a, b) => b.salesCount - a.salesCount)[0];
+  // Ordenar estadísticas por cantidad de ventas (Ranking)
+  const sortedStats = useMemo(() => {
+    return [...stats].sort((a, b) => b.salesCount - a.salesCount);
   }, [stats]);
 
-  // Frase motivadora dinámica
+  const topPerformer = sortedStats[0] || null;
+
+  // Frase motivadora dinámica para el líder
   const motivationalMessage = useMemo(() => {
-    if (!topPerformer || topPerformer.salesCount === 0) return "¡Vamos equipo! Cada registro es una oportunidad de crecimiento.";
+    if (!topPerformer || topPerformer.salesCount === 0) return "¡El podio está vacío! Sé el primero en marcar la diferencia hoy.";
     
     const phrases = [
-      `¡Atención todos! ${topPerformer.name} está imparable con ${topPerformer.salesCount} registros. ¡Ese es el nivel!`,
-      `¿Vieron eso? ${topPerformer.name} lidera el tablero. ¡Tu proactividad está llevando a Sling a lo más alto!`,
-      `¡Récord a la vista! ${topPerformer.name} ya suma ${topPerformer.salesCount} visitas. ¡Excelente ritmo de trabajo!`,
-      `${topPerformer.name}, tu compromiso con ${topPerformer.salesCount} registros es la brújula del equipo hoy.`,
-      `¡Pura eficiencia! ${topPerformer.name} encabeza la lista. ¡Sigamos este gran ejemplo de ventas!`
+      `¡Atención equipo! ${topPerformer.name} lidera el ranking con ${topPerformer.salesCount} registros. ¡Imparable!`,
+      `${topPerformer.name} está marcando el camino con ${topPerformer.salesCount} visitas. ¡Ese es el ritmo de Sling!`,
+      `¡Récord actual! ${topPerformer.name} es nuestro MVP con ${topPerformer.salesCount} registros. ¡A por más!`,
+      `${topPerformer.name}, tu liderazgo con ${topPerformer.salesCount} visitas inspira a todo el equipo.`,
+      `¡El número 1 hoy! ${topPerformer.name} encabeza el podio. ¡Excelente trabajo de campo!`
     ];
     
-    // Selección pseudo-aleatoria basada en el total de registros para que cambie a medida que cargan
     const index = (topPerformer.salesCount + topPerformer.name.length) % phrases.length;
     return phrases[index];
   }, [topPerformer]);
 
-  const getRowBackground = (count: number) => {
-    if (count === 0) return 'bg-red-50 text-red-900';
-    if (count >= 15) return 'bg-green-100 text-green-900 font-bold';
-    if (count >= 5) return 'bg-green-50 text-green-800 font-medium';
-    return 'bg-white text-gray-900';
+  const getRankIcon = (index: number) => {
+    switch (index) {
+      case 0: return <Medal className="text-yellow-500" size={20} />;
+      case 1: return <Medal className="text-gray-400" size={20} />;
+      case 2: return <Medal className="text-amber-600" size={20} />;
+      default: return <span className="text-gray-400 font-bold text-xs">{index + 1}º</span>;
+    }
+  };
+
+  const getRankStyle = (index: number) => {
+    switch (index) {
+      case 0: return 'bg-yellow-50 border-yellow-200 ring-2 ring-yellow-400 ring-opacity-50';
+      case 1: return 'bg-gray-50 border-gray-200';
+      case 2: return 'bg-orange-50 border-orange-200';
+      default: return 'bg-white border-gray-100';
+    }
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-12">
+      {/* Tablero de Posiciones Principal */}
       <div className="lg:col-span-2 space-y-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                  <span className="bg-purple-100 p-2 rounded-lg text-purple-600">
-                    <BarChart3 size={20} />
-                  </span>
-                  Rendimiento del Equipo
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">Comparativa de actividad por vendedor</p>
+        
+        {/* Banner Motivador Superior */}
+        {topPerformer && topPerformer.salesCount > 0 && (
+          <div className="bg-gradient-to-br from-slate-900 via-indigo-900 to-blue-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group border border-white/10">
+            <div className="absolute top-0 right-0 p-4 opacity-10 transform group-hover:rotate-12 transition-transform duration-700">
+              <Trophy size={140} />
             </div>
-
-            <div className="h-72 w-full mb-8">
-              <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} />
-                    <Tooltip 
-                        cursor={{fill: '#f3f4f6'}}
-                        contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
-                    />
-                    <Bar dataKey="salesCount" name="Registros" radius={[6, 6, 0, 0]}>
-                        {stats.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                    </Bar>
-                  </BarChart>
-              </ResponsiveContainer>
+            <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+              <div className="bg-white/10 p-5 rounded-3xl backdrop-blur-md border border-white/20 shadow-inner">
+                <Trophy className="text-yellow-400 animate-bounce" size={40} />
+              </div>
+              <div>
+                <h4 className="font-black text-2xl mb-1 tracking-tight flex items-center justify-center sm:justify-start gap-2">
+                  LÍDER DEL EQUIPO
+                  <Sparkles size={20} className="text-yellow-300 fill-yellow-300" />
+                </h4>
+                <p className="text-blue-100 text-lg leading-relaxed italic font-medium max-w-md">
+                  "{motivationalMessage}"
+                </p>
+              </div>
             </div>
-
-            {/* Motivational Banner - Dinámico para el líder */}
-            <div className="bg-gradient-to-br from-indigo-600 via-blue-700 to-indigo-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-10 transform group-hover:scale-110 transition-transform duration-500">
-                    <Trophy size={120} />
-                </div>
-                <div className="relative z-10 flex items-center gap-5">
-                    <div className="hidden sm:flex bg-white/20 p-4 rounded-2xl backdrop-blur-md border border-white/30 animate-pulse">
-                        <Sparkles className="text-yellow-300" size={32} />
-                    </div>
-                    <div>
-                        <h4 className="font-extrabold text-xl mb-2 flex items-center gap-2">
-                            Zona de Líderes
-                            <Star size={20} className="fill-yellow-400 text-yellow-400" />
-                        </h4>
-                        <p className="text-blue-50 text-lg leading-snug italic font-medium">
-                            "{motivationalMessage}"
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {/* Tabla de Comisiones */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-2">
-              <TrendingUp size={18} className="text-indigo-600" />
-              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Estado de Comisiones</h3>
           </div>
-          <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50/50">
-                  <tr>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Vendedor</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Registros</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Comisión</th>
-                  </tr>
+        )}
+
+        {/* Tabla de Posiciones */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-gray-50 px-6 py-5 border-b border-gray-200 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-600 rounded-lg text-white">
+                <Target size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-gray-800 uppercase tracking-tighter">Tabla de Posiciones</h3>
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">Ranking en tiempo real</p>
+              </div>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+              <Award size={14} />
+              {stats.length} VENDEDORES
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-50/50">
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Puesto</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Vendedor</th>
+                  <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Registros</th>
+                  <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Comisión</th>
+                </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                  {stats.map((stat) => (
-                      <tr key={stat.name} className={`${getRowBackground(stat.salesCount)} transition-all hover:bg-gray-50`}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm flex items-center gap-2">
-                              {topPerformer?.name === stat.name && stat.salesCount > 0 && <Trophy size={16} className="text-yellow-500 drop-shadow-sm" />}
-                              {stat.name}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              {stat.salesCount}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-black">
-                              {stat.commissionPercentage}%
-                          </td>
-                      </tr>
-                  ))}
+              <tbody className="divide-y divide-gray-100">
+                {sortedStats.length > 0 ? (
+                  sortedStats.map((stat, index) => (
+                    <tr 
+                      key={stat.name} 
+                      className={`transition-all hover:bg-gray-50/80 ${index < 3 ? 'font-bold' : ''}`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border shadow-sm ${getRankStyle(index)}`}>
+                          {getRankIcon(index)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${
+                            index === 0 ? 'bg-yellow-400 text-white' : 'bg-slate-200 text-slate-600'
+                          }`}>
+                            {stat.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-gray-800 text-sm">{stat.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className={`inline-flex items-center justify-center min-w-[32px] px-2 py-1 rounded-lg text-sm ${
+                          stat.salesCount > 0 ? 'bg-blue-50 text-blue-700 font-black' : 'bg-gray-50 text-gray-400'
+                        }`}>
+                          {stat.salesCount}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <span className={`text-sm ${
+                          stat.commissionPercentage >= 20 ? 'text-green-600 font-black' : 
+                          stat.commissionPercentage >= 10 ? 'text-blue-600 font-bold' : 'text-gray-500'
+                        }`}>
+                          {stat.commissionPercentage}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center text-gray-400 italic">
+                      No hay datos suficientes para generar el ranking.
+                    </td>
+                  </tr>
+                )}
               </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       </div>
 
-      <div className="lg:col-span-1">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
-            <div className="flex items-center gap-2 mb-4">
-                <HelpCircle size={20} className="text-blue-500" />
-                <h3 className="font-bold text-gray-800">Referencia de Pagos</h3>
-            </div>
-            
-            <div className="space-y-3">
-                {TIERS.map((tier, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100">
-                        <span className="text-sm text-gray-600 font-medium">{tier.range} registros</span>
-                        <span className="text-sm font-bold text-indigo-700">{tier.percentage}</span>
-                    </div>
-                ))}
-            </div>
-
-            <div className="mt-8 p-5 bg-indigo-50 rounded-2xl border border-indigo-100 relative">
-                <h4 className="text-xs font-black text-indigo-700 uppercase mb-3 tracking-wider">Tip de Ventas</h4>
-                <p className="text-sm text-indigo-800 leading-relaxed">
-                    "La diferencia entre un buen vendedor y uno excelente es un registro más antes de terminar el día."
-                </p>
-                <div className="absolute -bottom-2 -right-2 bg-indigo-600 text-white p-2 rounded-lg shadow-lg">
-                    <Sparkles size={16} />
+      {/* Panel Lateral: Referencia y Escalas */}
+      <div className="lg:col-span-1 space-y-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-24">
+          <div className="flex items-center gap-2 mb-6">
+            <TrendingUp size={20} className="text-blue-600" />
+            <h3 className="font-black text-gray-800 uppercase tracking-tighter">Escala de Comisiones</h3>
+          </div>
+          
+          <div className="space-y-2">
+            {TIERS.map((tier, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100 group hover:border-blue-200 hover:bg-white transition-all">
+                <div className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full ${
+                    idx === TIERS.length - 1 ? 'bg-green-500 animate-pulse' : 'bg-gray-300'
+                  }`}></div>
+                  <span className="text-sm text-gray-600 font-semibold">{tier.range} registros</span>
                 </div>
+                <span className={`text-sm font-black ${
+                  idx === TIERS.length - 1 ? 'text-green-600' : 'text-gray-900'
+                }`}>{tier.percentage}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 p-6 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl border border-indigo-100 relative overflow-hidden">
+            <div className="absolute -top-4 -right-4 text-indigo-200/50">
+               <Sparkles size={60} />
             </div>
+            <h4 className="text-[10px] font-black text-indigo-700 uppercase mb-3 tracking-widest relative z-10">Meta del mes</h4>
+            <p className="text-sm text-indigo-900 leading-relaxed font-medium relative z-10">
+              Superar los <span className="font-black text-indigo-700">15 registros</span> te garantiza el máximo de comisión (25%). ¡No te detengas!
+            </p>
+          </div>
         </div>
       </div>
     </div>
