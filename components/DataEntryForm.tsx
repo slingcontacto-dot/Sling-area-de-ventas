@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, SalesRecord, SoldStatus } from '../types';
-import { Save, CheckCircle2 } from 'lucide-react';
+import { dataService } from '../services/dataService';
+import { Save, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface DataEntryFormProps {
   currentUser: User;
@@ -13,135 +14,202 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
   const [industry, setIndustry] = useState('');
   const [sold, setSold] = useState<SoldStatus>(SoldStatus.INTERESADO);
   const [contactInfo, setContactInfo] = useState('');
+  
   const [successMsg, setSuccessMsg] = useState('');
+  const [duplicateError, setDuplicateError] = useState<{ exists: boolean; owner: string | null }>({
+    exists: false,
+    owner: null
+  });
+  const [isValidating, setIsValidating] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Automatic fields
-    const newRecord: Omit<SalesRecord, 'id'> = {
-      date: new Date().toLocaleDateString('es-AR'), // format DD/MM/YYYY
-      inCharge: currentUser.username,
-      address,
-      company,
-      industry,
-      sold,
-      contactInfo
-    };
+    setSuccessMsg('');
+    setDuplicateError({ exists: false, owner: null });
+    setIsValidating(true);
 
-    onSave(newRecord);
+    try {
+        // 1. Verificar si existe duplicado en toda la BD
+        const existingOwner = await dataService.checkDuplicate(company, contactInfo);
 
-    // Reset and show success
-    setAddress('');
-    setCompany('');
-    setIndustry('');
-    setSold(SoldStatus.INTERESADO);
-    setContactInfo('');
-    setSuccessMsg('Registro guardado exitosamente');
+        if (existingOwner) {
+            setDuplicateError({ exists: true, owner: existingOwner });
+            setIsValidating(false);
+            return; // Detener guardado
+        }
 
-    setTimeout(() => setSuccessMsg(''), 3000);
+        // 2. Si no hay duplicado, guardar
+        const newRecord: Omit<SalesRecord, 'id'> = {
+            date: new Date().toLocaleDateString('es-AR'),
+            inCharge: currentUser.username,
+            address,
+            company,
+            industry,
+            sold,
+            contactInfo
+        };
+
+        onSave(newRecord);
+
+        // 3. Reset y Éxito
+        setAddress('');
+        setCompany('');
+        setIndustry('');
+        setSold(SoldStatus.INTERESADO);
+        setContactInfo('');
+        setSuccessMsg('Registro guardado exitosamente');
+
+        setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setIsValidating(false);
+    }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-          <span className="bg-blue-100 p-2 rounded-lg text-blue-600">
-            <Save size={20} />
-          </span>
-          Nuevo Registro de Visita
-        </h2>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-12">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+            <div className="bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-200">
+                <Save size={24} />
+            </div>
+            Nueva Visita de Campo
+            </h2>
+            <p className="text-sm text-gray-400 font-bold uppercase tracking-wider mt-1">Carga de datos en tiempo real</p>
+        </div>
+        
         {successMsg && (
-          <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg text-sm font-medium animate-fade-in">
-            <CheckCircle2 size={16} />
+          <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-100 px-5 py-2.5 rounded-xl text-sm font-black animate-fade-in shadow-sm">
+            <CheckCircle2 size={18} />
             {successMsg}
           </div>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Read Only Auto Fields */}
-        <div className="md:col-span-1">
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Fecha (Automático)</label>
-            <div className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-500">
-                {new Date().toLocaleDateString('es-AR')}
+      {duplicateError.exists && (
+          <div className="mb-8 p-5 bg-red-50 border-2 border-red-100 rounded-2xl flex items-center gap-4 animate-bounce-short">
+              <div className="bg-red-500 p-3 rounded-full text-white shadow-lg">
+                  <AlertTriangle size={24} />
+              </div>
+              <div>
+                  <h4 className="text-red-800 font-black text-lg uppercase tracking-tight">¡Registro Duplicado!</h4>
+                  <p className="text-red-700 font-medium">
+                      Este registro ya fue realizado por: <span className="bg-red-200 px-2 py-0.5 rounded-lg font-black">{duplicateError.owner}</span>
+                  </p>
+              </div>
+          </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Auto Fields Info */}
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha Actual</label>
+                    <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-500 text-sm font-bold flex items-center gap-2">
+                        <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                        {new Date().toLocaleDateString('es-AR')}
+                    </div>
+                </div>
+                <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Vendedor</label>
+                    <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-indigo-600 text-sm font-black flex items-center gap-2">
+                        <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                        {currentUser.username}
+                    </div>
+                </div>
+            </div>
+
+            {/* Inputs */}
+            <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Empresa / Negocio</label>
+                <input
+                    type="text"
+                    required
+                    value={company}
+                    onChange={(e) => {
+                        setCompany(e.target.value);
+                        setDuplicateError({ exists: false, owner: null });
+                    }}
+                    className={`w-full p-3.5 border rounded-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all font-bold text-gray-800 ${
+                        duplicateError.exists ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                    }`}
+                    placeholder="Nombre del comercio"
+                />
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dirección Exacta</label>
+                <input
+                    type="text"
+                    required
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all font-bold text-gray-800"
+                    placeholder="Calle y altura"
+                />
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Rubro o Actividad</label>
+                <input
+                    type="text"
+                    required
+                    value={industry}
+                    onChange={(e) => setIndustry(e.target.value)}
+                    className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all font-bold text-gray-800"
+                    placeholder="Ej. Kiosco, Taller, etc."
+                />
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Información de Contacto</label>
+                <input
+                    type="text"
+                    required
+                    value={contactInfo}
+                    onChange={(e) => {
+                        setContactInfo(e.target.value);
+                        setDuplicateError({ exists: false, owner: null });
+                    }}
+                    className={`w-full p-3.5 border rounded-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all font-bold text-gray-800 ${
+                        duplicateError.exists ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                    }`}
+                    placeholder="WhatsApp o Instagram"
+                />
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Resultado de la visita</label>
+                <select
+                    value={sold}
+                    onChange={(e) => setSold(e.target.value as SoldStatus)}
+                    className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white font-black text-gray-800"
+                >
+                    <option value={SoldStatus.INTERESADO}>{SoldStatus.INTERESADO}</option>
+                    <option value={SoldStatus.SI}>Vendido (Éxito)</option>
+                    <option value={SoldStatus.NO}>Rechazado (No)</option>
+                    <option value={SoldStatus.PENDIENTE}>Volver a pasar</option>
+                </select>
             </div>
         </div>
-        <div className="md:col-span-1">
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Encargado (Automático)</label>
-            <div className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 font-medium">
-                {currentUser.username}
-            </div>
-        </div>
-        
-        {/* Input Fields */}
-        <div className="md:col-span-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-          <input
-            type="text"
-            required
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-            placeholder="Ej. Av. San Martín 123"
-          />
-        </div>
 
-        <div className="md:col-span-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Empresa / Negocio</label>
-          <input
-            type="text"
-            required
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-            placeholder="Ej. Kiosco El Paso"
-          />
-        </div>
-
-        <div className="md:col-span-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Rubro</label>
-          <input
-            type="text"
-            required
-            value={industry}
-            onChange={(e) => setIndustry(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-            placeholder="Ej. Alimentos, Ropa..."
-          />
-        </div>
-
-        <div className="md:col-span-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Estado de Venta</label>
-          <select
-            value={sold}
-            onChange={(e) => setSold(e.target.value as SoldStatus)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
-          >
-            <option value={SoldStatus.INTERESADO}>{SoldStatus.INTERESADO}</option>
-            <option value={SoldStatus.SI}>Vendido (Si)</option>
-            <option value={SoldStatus.NO}>Rechazado (No)</option>
-            <option value={SoldStatus.PENDIENTE}>Volver a pasar</option>
-          </select>
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Contacto (Teléfono / Instagram)</label>
-          <input
-            type="text"
-            value={contactInfo}
-            onChange={(e) => setContactInfo(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-            placeholder="Ej. 351-1234567 o @instagram"
-          />
-        </div>
-
-        <div className="md:col-span-3 flex justify-end mt-2">
+        <div className="flex justify-end pt-4">
             <button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all transform active:scale-95"
+                disabled={isValidating}
+                className="group relative bg-slate-900 hover:bg-black text-white font-black py-4 px-12 rounded-2xl shadow-2xl transition-all transform active:scale-95 flex items-center justify-center gap-3 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                Guardar Registro
+                {isValidating ? (
+                    <Loader2 className="animate-spin" size={20} />
+                ) : (
+                    <>
+                        <Save size={20} className="group-hover:rotate-12 transition-transform" />
+                        GUARDAR REGISTRO
+                    </>
+                )}
             </button>
         </div>
       </form>

@@ -8,7 +8,7 @@ export const dataService = {
   },
 
   /**
-   * Suscribirse a cambios en tiempo real en la tabla sales_records
+   * Suscribirse a cambios en tiempo real
    */
   subscribeToChanges: (onUpdate: () => void): RealtimeChannel => {
     return supabase
@@ -17,12 +17,38 @@ export const dataService = {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'sales_records' },
         (payload) => {
-          // Cuando ocurra cualquier cambio (INSERT, UPDATE, DELETE), ejecutamos la función
-          console.log('Cambio detectado en tiempo real:', payload);
           onUpdate();
         }
       )
       .subscribe();
+  },
+
+  /**
+   * Verifica si una empresa o contacto ya existen en la base de datos.
+   * Devuelve el nombre del encargado original si existe.
+   */
+  checkDuplicate: async (company: string, contact: string): Promise<string | null> => {
+    // Normalizar para comparación
+    const cleanCompany = company.trim().toLowerCase();
+    const cleanContact = contact.trim().toLowerCase();
+
+    // Consultar por empresa (exacta o muy similar) o contacto
+    const { data, error } = await supabase
+      .from('sales_records')
+      .select('company, contact_info, in_charge')
+      .or(`company.ilike.${cleanCompany},contact_info.ilike.${cleanContact}`);
+
+    if (error) {
+      console.error('Error verificando duplicados:', error);
+      return null;
+    }
+
+    if (data && data.length > 0) {
+      // Priorizamos encontrar coincidencia exacta de contacto o empresa
+      return data[0].in_charge;
+    }
+
+    return null;
   },
 
   /**
@@ -61,7 +87,7 @@ export const dataService = {
       query = query.eq('in_charge', user.username);
     }
 
-    const { data, error } = await query;
+    const { data, error } = query ? await query : { data: [], error: null };
 
     if (error) {
       console.error(error);
@@ -149,7 +175,6 @@ export const dataService = {
    * Clear all records
    */
   clearAllRecords: async (): Promise<void> => {
-    // Delete all where ID is not null
     await supabase
       .from('sales_records')
       .delete()
@@ -157,7 +182,7 @@ export const dataService = {
   },
 
   /**
-   * Convert records to CSV format for Excel
+   * Convert records to CSV format
    */
   convertToCSV: (records: SalesRecord[]): string => {
     const headers = ['Fecha', 'Encargado', 'Dirección', 'Empresa', 'Rubro', 'Vendido', 'Contacto'];
@@ -198,18 +223,15 @@ export const dataService = {
   },
 
   /**
-   * Get Stats (requires fetching all data first)
+   * Get Stats
    */
   getStats: async (): Promise<SalesStat[]> => {
     const allRecords = await dataService.getAllRecords();
-    
-    // Obtenemos SOLO los usuarios registrados actualmente
     const { data: usersData } = await supabase.from('app_users').select('username');
     
     const statsMap: Record<string, number> = {};
     const validUsernames = new Set<string>();
 
-    // Inicializamos el mapa solo con los usuarios registrados
     if (usersData) {
       usersData.forEach((u: any) => {
         statsMap[u.username] = 0;
@@ -217,13 +239,10 @@ export const dataService = {
       });
     }
 
-    // Contamos registros solo si el usuario sigue existiendo en el sistema
     allRecords.forEach(r => {
-      // Si el encargado está en la lista de usuarios válidos, sumamos
       if (validUsernames.has(r.inCharge)) {
         statsMap[r.inCharge]++;
       }
-      // Si el encargado fue eliminado, ignoramos sus registros antiguos para la estadística
     });
 
     return Object.entries(statsMap).map(([name, count]) => {
