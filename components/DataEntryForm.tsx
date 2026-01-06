@@ -28,17 +28,17 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
     setDuplicateError({ exists: false, owner: null });
     setIsValidating(true);
 
+    const finalContact = contactInfo.trim();
+
     try {
-        // 1. Verificar si existe duplicado en toda la BD
-        const existingOwner = await dataService.checkDuplicate(company, contactInfo);
+        const existingOwner = await dataService.checkDuplicate(company, finalContact);
 
         if (existingOwner) {
             setDuplicateError({ exists: true, owner: existingOwner });
             setIsValidating(false);
-            return; // Detener guardado
+            return;
         }
 
-        // 2. Si no hay duplicado, guardar
         const newRecord: Omit<SalesRecord, 'id'> = {
             date: new Date().toLocaleDateString('es-AR'),
             inCharge: currentUser.username,
@@ -46,12 +46,11 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
             company,
             industry,
             sold,
-            contactInfo
+            contactInfo: finalContact
         };
 
         onSave(newRecord);
 
-        // 3. Reset y Éxito
         setAddress('');
         setCompany('');
         setIndustry('');
@@ -104,7 +103,6 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Auto Fields Info */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha Actual</label>
@@ -122,7 +120,6 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
                 </div>
             </div>
 
-            {/* Inputs */}
             <div className="space-y-1">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Empresa / Negocio</label>
                 <input
@@ -177,7 +174,7 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
                     className={`w-full p-3.5 border rounded-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all font-bold text-gray-800 ${
                         duplicateError.exists ? 'border-red-400 bg-red-50' : 'border-gray-300'
                     }`}
-                    placeholder="WhatsApp o Instagram"
+                    placeholder="Número o contacto"
                 />
             </div>
 

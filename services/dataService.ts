@@ -28,11 +28,9 @@ export const dataService = {
    * Devuelve el nombre del encargado original si existe.
    */
   checkDuplicate: async (company: string, contact: string): Promise<string | null> => {
-    // Normalizar para comparación
     const cleanCompany = company.trim().toLowerCase();
     const cleanContact = contact.trim().toLowerCase();
 
-    // Consultar por empresa (exacta o muy similar) o contacto
     const { data, error } = await supabase
       .from('sales_records')
       .select('company, contact_info, in_charge')
@@ -44,7 +42,6 @@ export const dataService = {
     }
 
     if (data && data.length > 0) {
-      // Priorizamos encontrar coincidencia exacta de contacto o empresa
       return data[0].in_charge;
     }
 

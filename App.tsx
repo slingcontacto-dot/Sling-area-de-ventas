@@ -19,11 +19,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   
-  // Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [recordToEdit, setRecordToEdit] = useState<SalesRecord | null>(null);
   
-  // Recognition Modal State - Reset when user logs in
   const [showTopUserModal, setShowTopUserModal] = useState(false);
   const [hasAcknowledgedInThisSession, setHasAcknowledgedInThisSession] = useState(false);
 
@@ -58,7 +56,6 @@ function App() {
         const fetchedStats = await dataService.getStats();
         setStats(fetchedStats);
 
-        // Cada vez que se entra a la cuenta (initialLoad), verificamos si es el mejor
         if (initialLoad && !hasAcknowledgedInThisSession && fetchedStats.length > 0) {
             const topPerformer = [...fetchedStats].sort((a, b) => b.salesCount - a.salesCount)[0];
             if (topPerformer && topPerformer.name === user.username && topPerformer.salesCount > 0) {
@@ -71,7 +68,7 @@ function App() {
   };
 
   const handleLogin = (loggedInUser: User) => {
-    setHasAcknowledgedInThisSession(false); // Reiniciar estado para que siempre le salga al entrar
+    setHasAcknowledgedInThisSession(false);
     setUser(loggedInUser);
     setActiveTab('list');
   };
@@ -136,7 +133,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans text-gray-900 flex flex-col">
-      {/* Recognition Modal - SIEMPRE AL ENTRAR SI ES EL MEJOR */}
       {showTopUserModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/95 backdrop-blur-xl p-4 animate-fade-in">
           <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden transform animate-bounce-short">
@@ -184,7 +180,6 @@ function App() {
         </div>
       )}
 
-      {/* Header */}
       <header className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -235,50 +230,18 @@ function App() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-center mb-10">
             <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-gray-200 flex flex-wrap justify-center gap-1">
-                <button
-                    onClick={() => setActiveTab('list')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${
-                        activeTab === 'list' 
-                        ? 'bg-slate-900 text-white shadow-lg' 
-                        : 'text-gray-500 hover:bg-gray-50'
-                    }`}
-                >
-                    <LayoutDashboard size={18} />
-                    Planilla
+                <button onClick={() => setActiveTab('list')} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'list' ? 'bg-slate-900 text-white shadow-lg' : 'text-gray-500 hover:bg-gray-50'}`}>
+                    <LayoutDashboard size={18} /> Planilla
                 </button>
-                <button
-                    onClick={() => setActiveTab('entry')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${
-                        activeTab === 'entry' 
-                        ? 'bg-slate-900 text-white shadow-lg' 
-                        : 'text-gray-500 hover:bg-gray-50'
-                    }`}
-                >
-                    <PlusCircle size={18} />
-                    Nueva Visita
+                <button onClick={() => setActiveTab('entry')} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'entry' ? 'bg-slate-900 text-white shadow-lg' : 'text-gray-500 hover:bg-gray-50'}`}>
+                    <PlusCircle size={18} /> Nueva Visita
                 </button>
-                <button
-                    onClick={() => setActiveTab('stats')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${
-                        activeTab === 'stats' 
-                        ? 'bg-slate-900 text-white shadow-lg' 
-                        : 'text-gray-500 hover:bg-gray-50'
-                    }`}
-                >
-                    <PieChart size={18} />
-                    Estadísticas
+                <button onClick={() => setActiveTab('stats')} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'stats' ? 'bg-slate-900 text-white shadow-lg' : 'text-gray-500 hover:bg-gray-50'}`}>
+                    <PieChart size={18} /> Estadísticas
                 </button>
                 {user.role === 'owner' && (
-                    <button
-                        onClick={() => setActiveTab('users')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${
-                            activeTab === 'users' 
-                            ? 'bg-slate-900 text-white shadow-lg' 
-                            : 'text-gray-500 hover:bg-gray-50'
-                        }`}
-                    >
-                        <Users size={18} />
-                        Personal
+                    <button onClick={() => setActiveTab('users')} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-slate-900 text-white shadow-lg' : 'text-gray-500 hover:bg-gray-50'}`}>
+                        <Users size={18} /> Personal
                     </button>
                 )}
             </div>
@@ -288,24 +251,17 @@ function App() {
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
                     <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-                    <p className="text-gray-500 font-medium animate-pulse">Sincronizando datos con el servidor...</p>
+                    <p className="text-gray-500 font-medium animate-pulse">Procesando datos...</p>
                 </div>
             ) : (
                 <>
-                    {activeTab === 'entry' && (
-                        <div className="max-w-4xl mx-auto">
-                            <DataEntryForm currentUser={user} onSave={handleSaveRecord} />
-                        </div>
-                    )}
-
+                    {activeTab === 'entry' && <div className="max-w-4xl mx-auto"><DataEntryForm currentUser={user} onSave={handleSaveRecord} /></div>}
                     {activeTab === 'list' && (
                         <>
                             {user.role === 'owner' && (
                                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-8 flex flex-wrap items-center justify-between gap-5">
                                     <div className="flex items-center gap-3 text-slate-800">
-                                        <div className="p-2 bg-blue-50 rounded-lg">
-                                            <Database size={22} className="text-blue-600" />
-                                        </div>
+                                        <div className="p-2 bg-blue-50 rounded-lg"><Database size={22} className="text-blue-600" /></div>
                                         <div>
                                             <span className="font-black text-sm block">Panel de Administración</span>
                                             <span className="text-[10px] text-gray-400 uppercase font-bold">Gestión de base de datos</span>
@@ -324,38 +280,11 @@ function App() {
                                     </div>
                                 </div>
                             )}
-                            
-                            {user.role === 'employee' && (
-                                <div className="flex justify-end mb-6">
-                                    <button onClick={handleExportExcel} className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-lg text-xs font-black transition-all transform active:scale-95">
-                                        <FileSpreadsheet size={16} /> DESCARGAR MI PLANILLA
-                                    </button>
-                                </div>
-                            )}
-
                             <SalesTable records={records} currentUser={user} onEdit={handleEditClick} onDelete={handleDeleteRecord} />
                         </>
                     )}
-
-                    {activeTab === 'stats' && (
-                        <div className="max-w-5xl mx-auto">
-                            <StatsView stats={stats} />
-                            {user.role === 'owner' && (
-                                <div className="mt-8 bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-2xl p-8 text-center">
-                                    <h3 className="text-indigo-900 font-black text-xl mb-2">Resumen Gerencial</h3>
-                                    <p className="text-indigo-700 font-medium">
-                                        Se han auditado <span className="bg-white px-3 py-1 rounded-lg shadow-sm font-black mx-1">{records.length}</span> registros totales en el ciclo vigente.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {activeTab === 'users' && user.role === 'owner' && (
-                        <div className="max-w-5xl mx-auto">
-                            <UserManagement />
-                        </div>
-                    )}
+                    {activeTab === 'stats' && <div className="max-w-5xl mx-auto"><StatsView stats={stats} /></div>}
+                    {activeTab === 'users' && user.role === 'owner' && <div className="max-w-5xl mx-auto"><UserManagement /></div>}
                 </>
             )}
         </div>
