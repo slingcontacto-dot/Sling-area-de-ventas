@@ -1,3 +1,4 @@
+
 export type UserRole = 'owner' | 'employee';
 
 export interface User {
@@ -28,6 +29,7 @@ export interface SalesRecord {
 export interface SalesStat {
   name: string;
   salesCount: number;
+  contactedCount: number; // Nuevo campo para el ranking
   commissionPercentage: number;
   totalRevenue?: number; // Optional based on future needs
 }

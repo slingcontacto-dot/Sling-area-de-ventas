@@ -56,7 +56,6 @@ export const dataService = {
         industry: row.industry,
         sold: row.sold,
         contactInfo: row.contact_info,
-        // Fix: Add contacted field to mapping
         contacted: row.contacted
       }));
     } catch (err) {
@@ -78,7 +77,6 @@ export const dataService = {
         industry: row.industry,
         sold: row.sold,
         contactInfo: row.contact_info,
-        // Fix: Add contacted field to mapping
         contacted: row.contacted
       }));
     } catch (err) {
@@ -96,7 +94,6 @@ export const dataService = {
       industry: record.industry,
       sold: record.sold,
       contact_info: record.contactInfo,
-      // Fix: Add contacted field to insert payload
       contacted: record.contacted
     };
 
@@ -118,7 +115,6 @@ export const dataService = {
         industry: data.industry,
         sold: data.sold,
         contactInfo: data.contact_info,
-        // Fix: Add contacted field to returned record
         contacted: data.contacted
       };
     } catch (err) {
@@ -139,7 +135,6 @@ export const dataService = {
           address: updatedRecord.address,
           sold: updatedRecord.sold,
           contact_info: updatedRecord.contactInfo,
-          // Fix: Add contacted field to update payload
           contacted: updatedRecord.contacted
         })
         .eq('id', updatedRecord.id);
@@ -174,26 +169,38 @@ export const dataService = {
   getStats: async (): Promise<SalesStat[]> => {
     const allRecords = await dataService.getAllRecords();
     
-    // Contar por vendedor
-    const counts: Record<string, number> = {};
+    // Mapa para acumular datos por vendedor
+    const userStatsMap: Record<string, { total: number; contacted: number }> = {};
+    
     allRecords.forEach(r => {
-      counts[r.inCharge] = (counts[r.inCharge] || 0) + 1;
+      if (!userStatsMap[r.inCharge]) {
+        userStatsMap[r.inCharge] = { total: 0, contacted: 0 };
+      }
+      userStatsMap[r.inCharge].total++;
+      if (r.contacted === 'Si') {
+        userStatsMap[r.inCharge].contacted++;
+      }
     });
 
-    return Object.entries(counts).map(([name, count]) => {
+    return Object.entries(userStatsMap).map(([name, data]) => {
       let percentage = 0;
-      if (count >= 15) percentage = 25;
-      else if (count >= 10) percentage = 20;
-      else if (count >= 5) percentage = 15;
-      else if (count >= 1) percentage = 10;
+      if (data.total >= 15) percentage = 25;
+      else if (data.total >= 10) percentage = 20;
+      else if (data.total >= 5) percentage = 15;
+      else if (data.total >= 1) percentage = 10;
 
-      return { name, salesCount: count, commissionPercentage: percentage };
+      return { 
+        name, 
+        salesCount: data.total, 
+        contactedCount: data.contacted, // Se añade el cálculo real de contactados
+        commissionPercentage: percentage 
+      };
     });
   },
 
   convertToCSV: (records: SalesRecord[]): string => {
-    const headers = ['Fecha', 'Encargado', 'Dirección', 'Empresa', 'Rubro', 'Vendido', 'Contacto'];
-    const rows = records.map(r => [r.date, r.inCharge, `"${r.address}"`, `"${r.company}"`, r.industry, r.sold, `"${r.contactInfo}"`]);
+    const headers = ['Fecha', 'Encargado', 'Dirección', 'Empresa', 'Rubro', 'Vendido', 'Contacto', 'Contactado'];
+    const rows = records.map(r => [r.date, r.inCharge, `"${r.address}"`, `"${r.company}"`, r.industry, r.sold, `"${r.contactInfo}"`, r.contacted]);
     return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
   },
 

@@ -1,6 +1,7 @@
+
 import React, { useMemo } from 'react';
 import { SalesStat } from '../types';
-import { TrendingUp, HelpCircle, Trophy, Sparkles, Star, Medal, Target, Award } from 'lucide-react';
+import { TrendingUp, Trophy, Sparkles, Medal, Target, Award, Users } from 'lucide-react';
 
 interface StatsViewProps {
   stats: SalesStat[];
@@ -96,8 +97,8 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
                 <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">Ranking en tiempo real</p>
               </div>
             </div>
-            <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
-              <Award size={14} />
+            <div className="flex items-center gap-2 text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+              <Users size={14} />
               {stats.length} VENDEDORES
             </div>
           </div>
@@ -109,6 +110,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
                   <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Puesto</th>
                   <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Vendedor</th>
                   <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Registros</th>
+                  <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Contactados</th>
                   <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Comisión</th>
                 </tr>
               </thead>
@@ -136,9 +138,16 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className={`inline-flex items-center justify-center min-w-[32px] px-2 py-1 rounded-lg text-sm ${
-                          stat.salesCount > 0 ? 'bg-blue-50 text-blue-700 font-black' : 'bg-gray-50 text-gray-400'
+                          stat.salesCount > 0 ? 'bg-blue-50 text-blue-700 font-black border border-blue-100' : 'bg-gray-50 text-gray-400'
                         }`}>
                           {stat.salesCount}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className={`inline-flex items-center justify-center min-w-[32px] px-2 py-1 rounded-lg text-sm ${
+                          stat.contactedCount > 0 ? 'bg-indigo-50 text-indigo-700 font-black border border-indigo-100' : 'bg-gray-50 text-gray-400'
+                        }`}>
+                          {stat.contactedCount}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -153,7 +162,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-gray-400 italic">
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400 italic">
                       No hay datos suficientes para generar el ranking.
                     </td>
                   </tr>
