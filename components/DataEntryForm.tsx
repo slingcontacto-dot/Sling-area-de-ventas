@@ -9,7 +9,7 @@ interface DataEntryFormProps {
   onSave: (record: Omit<SalesRecord, 'id'>) => void;
 }
 
-const PREDEFINED_RUBROS = ['ROPA', 'COMIDA', 'CONSULTORIO', 'CANCHAS', 'TECNOLOGIA', 'PELUQUERIA'];
+const PREDEFINED_RUBROS = ['ROPA', 'COMIDA', 'CONSULTORIO', 'CANCHAS', 'TECNOLOGIA', 'PELUQUERIA', 'MAYORISTA', 'LIBRERIA'];
 
 export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSave }) => {
   const [address, setAddress] = useState('');

@@ -10,7 +10,7 @@ interface EditRecordModalProps {
   onSave: (record: SalesRecord) => void;
 }
 
-const PREDEFINED_RUBROS = ['ROPA', 'COMIDA', 'CONSULTORIO', 'CANCHAS', 'TECNOLOGIA', 'PELUQUERIA'];
+const PREDEFINED_RUBROS = ['ROPA', 'COMIDA', 'CONSULTORIO', 'CANCHAS', 'TECNOLOGIA', 'PELUQUERIA', 'MAYORISTA', 'LIBRERIA'];
 
 export const EditRecordModal: React.FC<EditRecordModalProps> = ({ isOpen, onClose, record, onSave }) => {
   const [formData, setFormData] = useState<SalesRecord | null>(null);
