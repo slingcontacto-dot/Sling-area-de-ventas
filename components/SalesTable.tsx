@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { SalesRecord, SoldStatus, User } from '../types';
 import { dataService } from '../services/dataService';
-import { Search, Edit2, Trash2, Filter, MessageCircle, Check, X, Calendar, User as UserIcon, Building2, Tag, MapPin } from 'lucide-react';
+import { Search, Edit2, Trash2, Filter, MessageCircle, Check, X, LayoutGrid } from 'lucide-react';
 
 interface SalesTableProps {
   records: SalesRecord[];
@@ -49,7 +49,16 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
       r.inCharge.toLowerCase().includes(term) ||
       r.contactInfo.toLowerCase().includes(term);
     
-    const matchesStatus = statusFilter === 'all' || r.sold === statusFilter;
+    // CORRECCIÓN DE FILTRO: Incluimos registros antiguos 'Interesado/Dudoso' en la vista de 'Pendiente'
+    let matchesStatus = statusFilter === 'all';
+    if (!matchesStatus) {
+        if (statusFilter === SoldStatus.PENDIENTE) {
+            matchesStatus = r.sold === SoldStatus.PENDIENTE || r.sold === 'Interesado/Dudoso';
+        } else {
+            matchesStatus = r.sold === statusFilter;
+        }
+    }
+
     return matchesSearch && matchesStatus;
   });
 
@@ -57,8 +66,9 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
     switch (status) {
       case SoldStatus.SI: return 'bg-green-100 text-green-700 border-green-200';
       case SoldStatus.NO: return 'bg-red-100 text-red-700 border-red-200';
-      case SoldStatus.PENDIENTE: return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'Interesado/Dudoso': return 'bg-yellow-100 text-yellow-700 border-yellow-200'; // Legacy fallback
+      case SoldStatus.PENDIENTE: 
+      case 'Interesado/Dudoso': 
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
@@ -123,7 +133,7 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
                 filteredRecords.map((record) => {
                   const allowed = canModify(record);
                   const hasContact = !!record.contactInfo;
-                  const displayStatus = record.sold === 'Interesado/Dudoso' ? 'Pendiente' : record.sold;
+                  const displayStatus = (record.sold === 'Interesado/Dudoso' || record.sold === SoldStatus.PENDIENTE) ? 'Pendiente' : record.sold;
 
                   return (
                     <tr key={record.id} className="hover:bg-gray-50/80 transition-colors group">
@@ -210,10 +220,3 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
     </div>
   );
 };
-
-// Import helper added locally to avoid missing component
-const LayoutGrid = ({ size, className }: { size: number, className?: string }) => (
-    <div className={`w-${size/4} h-${size/4} ${className}`}>
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-    </div>
-);
