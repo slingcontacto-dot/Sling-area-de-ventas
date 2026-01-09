@@ -1,5 +1,5 @@
 
-import { SalesRecord, User, SalesStat } from '../types';
+import { SalesRecord, User, SalesStat, SoldStatus } from '../types';
 import { supabase } from './supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -169,17 +169,23 @@ export const dataService = {
   getStats: async (): Promise<SalesStat[]> => {
     const allRecords = await dataService.getAllRecords();
     
-    // Mapa para acumular datos por vendedor
-    const userStatsMap: Record<string, { total: number; contacted: number }> = {};
+    const userStatsMap: Record<string, { total: number; contacted: number; vendido: number; rechazado: number; pendiente: number }> = {};
     
     allRecords.forEach(r => {
       if (!userStatsMap[r.inCharge]) {
-        userStatsMap[r.inCharge] = { total: 0, contacted: 0 };
+        userStatsMap[r.inCharge] = { total: 0, contacted: 0, vendido: 0, rechazado: 0, pendiente: 0 };
       }
+      
       userStatsMap[r.inCharge].total++;
+      
       if (r.contacted === 'Si') {
         userStatsMap[r.inCharge].contacted++;
       }
+
+      const status = r.sold;
+      if (status === SoldStatus.SI) userStatsMap[r.inCharge].vendido++;
+      else if (status === SoldStatus.NO) userStatsMap[r.inCharge].rechazado++;
+      else if (status === SoldStatus.PENDIENTE || status === 'Interesado/Dudoso') userStatsMap[r.inCharge].pendiente++;
     });
 
     return Object.entries(userStatsMap).map(([name, data]) => {
@@ -192,7 +198,10 @@ export const dataService = {
       return { 
         name, 
         salesCount: data.total, 
-        contactedCount: data.contacted, // Se añade el cálculo real de contactados
+        contactedCount: data.contacted,
+        vendidoCount: data.vendido,
+        rechazadoCount: data.rechazado,
+        pendienteCount: data.pendiente,
         commissionPercentage: percentage 
       };
     });

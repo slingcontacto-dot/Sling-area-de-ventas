@@ -120,10 +120,9 @@ export const EditRecordModal: React.FC<EditRecordModalProps> = ({ isOpen, onClos
                     onChange={(e) => setFormData({...formData, sold: e.target.value})}
                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
                 >
-                    <option value={SoldStatus.INTERESADO}>{SoldStatus.INTERESADO}</option>
+                    <option value={SoldStatus.PENDIENTE}>Pendiente</option>
                     <option value={SoldStatus.SI}>Vendido (Si)</option>
                     <option value={SoldStatus.NO}>Rechazado (No)</option>
-                    <option value={SoldStatus.PENDIENTE}>Volver a pasar</option>
                 </select>
              </div>
              <div>

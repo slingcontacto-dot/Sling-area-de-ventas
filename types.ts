@@ -10,7 +10,6 @@ export interface User {
 export enum SoldStatus {
   SI = 'Si',
   NO = 'No',
-  INTERESADO = 'Interesado/Dudoso',
   PENDIENTE = 'Pendiente'
 }
 
@@ -28,8 +27,11 @@ export interface SalesRecord {
 
 export interface SalesStat {
   name: string;
-  salesCount: number;
-  contactedCount: number; // Nuevo campo para el ranking
+  salesCount: number; // Total de registros realizados
+  contactedCount: number;
+  vendidoCount: number;
+  rechazadoCount: number;
+  pendienteCount: number;
   commissionPercentage: number;
-  totalRevenue?: number; // Optional based on future needs
+  totalRevenue?: number;
 }

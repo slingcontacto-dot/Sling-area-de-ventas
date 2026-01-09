@@ -16,7 +16,7 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
   const [company, setCompany] = useState('');
   const [selectedRubro, setSelectedRubro] = useState('');
   const [customRubro, setCustomRubro] = useState('');
-  const [sold, setSold] = useState<SoldStatus>(SoldStatus.INTERESADO);
+  const [sold, setSold] = useState<SoldStatus>(SoldStatus.PENDIENTE);
   const [contactInfo, setContactInfo] = useState('');
   const [contacted, setContacted] = useState<'Si' | 'No'>('No');
   
@@ -69,7 +69,7 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
         setCompany('');
         setSelectedRubro('');
         setCustomRubro('');
-        setSold(SoldStatus.INTERESADO);
+        setSold(SoldStatus.PENDIENTE);
         setContactInfo('');
         setContacted('No');
         setSuccessMsg('Registro guardado exitosamente');
@@ -221,10 +221,9 @@ export const DataEntryForm: React.FC<DataEntryFormProps> = ({ currentUser, onSav
                     onChange={(e) => setSold(e.target.value as SoldStatus)}
                     className="w-full p-3.5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white font-black text-gray-800"
                 >
-                    <option value={SoldStatus.INTERESADO}>{SoldStatus.INTERESADO}</option>
+                    <option value={SoldStatus.PENDIENTE}>Pendiente</option>
                     <option value={SoldStatus.SI}>Vendido (Éxito)</option>
                     <option value={SoldStatus.NO}>Rechazado (No)</option>
-                    <option value={SoldStatus.PENDIENTE}>Volver a pasar</option>
                 </select>
             </div>
 

@@ -1,13 +1,15 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { SalesStat } from '../types';
-import { TrendingUp, Trophy, Sparkles, Medal, Target, Award, Users } from 'lucide-react';
+import { TrendingUp, Trophy, Sparkles, Medal, Target, Award, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 interface StatsViewProps {
   stats: SalesStat[];
 }
 
 export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
+  const [hoveredUser, setHoveredUser] = useState<string | null>(null);
+
   const TIERS = [
     { range: '0', percentage: '0%' },
     { range: '1 - 4', percentage: '10%' },
@@ -16,14 +18,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
     { range: '15 o más', percentage: '25%' },
   ];
 
-  // Ordenar estadísticas por cantidad de ventas (Ranking)
   const sortedStats = useMemo(() => {
     return [...stats].sort((a, b) => b.salesCount - a.salesCount);
   }, [stats]);
 
   const topPerformer = sortedStats[0] || null;
 
-  // Frase motivadora dinámica para el líder
   const motivationalMessage = useMemo(() => {
     if (!topPerformer || topPerformer.salesCount === 0) return "¡El podio está vacío! Sé el primero en marcar la diferencia hoy.";
     
@@ -64,7 +64,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
         
         {/* Banner Motivador Superior */}
         {topPerformer && topPerformer.salesCount > 0 && (
-          <div className="bg-gradient-to-br from-slate-900 via-indigo-900 to-blue-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group border border-white/10">
+          <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group border border-white/10">
             <div className="absolute top-0 right-0 p-4 opacity-10 transform group-hover:rotate-12 transition-transform duration-700">
               <Trophy size={140} />
             </div>
@@ -103,7 +103,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-visible">
             <table className="min-w-full">
               <thead>
                 <tr className="bg-gray-50/50">
@@ -119,21 +119,64 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
                   sortedStats.map((stat, index) => (
                     <tr 
                       key={stat.name} 
-                      className={`transition-all hover:bg-gray-50/80 ${index < 3 ? 'font-bold' : ''}`}
+                      className={`transition-all hover:bg-gray-50/80 group ${index < 3 ? 'font-bold' : ''}`}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center border shadow-sm ${getRankStyle(index)}`}>
                           {getRankIcon(index)}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
+                      <td className="px-6 py-4 whitespace-nowrap relative">
+                        <div 
+                          className="flex items-center gap-3 cursor-help py-1 group/name"
+                          onMouseEnter={() => setHoveredUser(stat.name)}
+                          onMouseLeave={() => setHoveredUser(null)}
+                          onClick={() => setHoveredUser(hoveredUser === stat.name ? null : stat.name)}
+                        >
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${
                             index === 0 ? 'bg-yellow-400 text-white' : 'bg-slate-200 text-slate-600'
                           }`}>
                             {stat.name.charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-gray-800 text-sm">{stat.name}</span>
+                          <span className="text-gray-800 text-sm border-b border-transparent group-hover/name:border-indigo-400 transition-colors">
+                            {stat.name}
+                          </span>
+
+                          {/* Tooltip de Desglose */}
+                          {hoveredUser === stat.name && (
+                            <div className="absolute left-full top-0 ml-4 z-[100] animate-fade-in">
+                                <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-white/10 w-48 pointer-events-none">
+                                    <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-3 pb-2 border-b border-white/10">
+                                        Desglose de {stat.name}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-xs text-green-400 font-bold">
+                                                <CheckCircle size={14} /> Vendidos
+                                            </div>
+                                            <span className="text-xs font-black">{stat.vendidoCount}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-xs text-red-400 font-bold">
+                                                <XCircle size={14} /> Rechazados
+                                            </div>
+                                            <span className="text-xs font-black">{stat.rechazadoCount}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-xs text-yellow-400 font-bold">
+                                                <Clock size={14} /> Pendientes
+                                            </div>
+                                            <span className="text-xs font-black">{stat.pendienteCount}</span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between">
+                                        <span className="text-[10px] text-gray-400 font-bold uppercase">Total Visitas</span>
+                                        <span className="text-xs font-black text-indigo-300">{stat.salesCount}</span>
+                                    </div>
+                                </div>
+                                <div className="absolute left-[-6px] top-6 w-3 h-3 bg-slate-900 rotate-45 border-l border-b border-white/10"></div>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -197,7 +240,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
             ))}
           </div>
 
-          <div className="mt-8 p-6 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl border border-indigo-100 relative overflow-hidden">
+          <div className="mt-8 p-6 bg-indigo-50 rounded-2xl border border-indigo-100 relative overflow-hidden">
             <div className="absolute -top-4 -right-4 text-indigo-200/50">
                <Sparkles size={60} />
             </div>
