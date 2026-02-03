@@ -1,4 +1,5 @@
 
+
 export type UserRole = 'owner' | 'employee';
 
 export interface User {
@@ -13,6 +14,12 @@ export enum SoldStatus {
   PENDIENTE = 'Pendiente'
 }
 
+export interface Cycle {
+  id: string;
+  created_at: string;
+  name: string;
+}
+
 export interface SalesRecord {
   id: string;
   date: string; // ISO Date string or formatted string
@@ -23,6 +30,7 @@ export interface SalesRecord {
   sold: SoldStatus | string;
   contactInfo: string; // Numero/IG
   contacted: 'Si' | 'No'; // New field
+  cycleId?: string | null; // Null means current cycle
 }
 
 export interface SalesStat {
