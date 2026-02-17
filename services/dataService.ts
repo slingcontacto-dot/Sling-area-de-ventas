@@ -1,5 +1,3 @@
-
-
 import { SalesRecord, User, SalesStat, SoldStatus, Cycle } from '../types';
 import { supabase } from './supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -247,10 +245,13 @@ export const dataService = {
 
     return Object.entries(userStatsMap).map(([name, data]) => {
       let percentage = 0;
-      if (data.total >= 15) percentage = 25;
-      else if (data.total >= 10) percentage = 20;
-      else if (data.total >= 5) percentage = 15;
-      else if (data.total >= 1) percentage = 10;
+      // Updated logic based on new Tiers:
+      // 60+ -> 25%
+      // 45-59 -> 10%
+      // 0-44 -> 0%
+      if (data.total >= 60) percentage = 25;
+      else if (data.total >= 45) percentage = 10;
+      else percentage = 0;
 
       return { 
         name, 

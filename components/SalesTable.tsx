@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { SalesRecord, SoldStatus, User } from '../types';
 import { dataService } from '../services/dataService';
-import { Search, Edit2, Trash2, Filter, MessageCircle, Check, X, LayoutGrid } from 'lucide-react';
+import { Search, Edit2, Trash2, Filter, MessageCircle, Check, X, LayoutGrid, MapPin, User as UserIcon, Calendar, Building2, Tag } from 'lucide-react';
 
 interface SalesTableProps {
   records: SalesRecord[];
@@ -49,7 +49,6 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
       r.inCharge.toLowerCase().includes(term) ||
       r.contactInfo.toLowerCase().includes(term);
     
-    // CORRECCIÓN DE FILTRO: Incluimos registros antiguos 'Interesado/Dudoso' en la vista de 'Pendiente'
     let matchesStatus = statusFilter === 'all';
     if (!matchesStatus) {
         if (statusFilter === SoldStatus.PENDIENTE) {
@@ -74,38 +73,39 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-            <div className="bg-indigo-50 p-2.5 rounded-xl">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
+      {/* Header optimizado */}
+      <div className="p-4 md:p-6 border-b border-gray-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+            <div className="bg-indigo-50 p-2.5 rounded-xl shrink-0">
                 <LayoutGrid size={22} className="text-indigo-600" />
             </div>
-            <div>
-                <h2 className="text-xl font-black text-slate-800 tracking-tight">Todos los Registros</h2>
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{filteredRecords.length} registros cargados</p>
+            <div className="min-w-0">
+                <h2 className="text-lg md:text-xl font-black text-slate-800 tracking-tight truncate">Registros de Campo</h2>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{filteredRecords.length} registros</p>
             </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 shrink-0">
             <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                 <select 
                     value={statusFilter} 
                     onChange={(e) => setStatusFilter(e.target.value)} 
-                    className="pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm font-bold focus:ring-4 focus:ring-indigo-50 bg-white appearance-none cursor-pointer text-gray-600 min-w-[180px]"
+                    className="pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-100 bg-white appearance-none cursor-pointer text-gray-600 w-full sm:w-auto"
                 >
-                    <option value="all">Todos los estados</option>
+                    <option value="all">Filtro: Todos</option>
                     <option value={SoldStatus.SI}>Vendido</option>
                     <option value={SoldStatus.NO}>Rechazado</option>
                     <option value={SoldStatus.PENDIENTE}>Pendiente</option>
                 </select>
             </div>
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                 <input 
                     type="text" 
-                    placeholder="Buscar empresa, dirección, rubro..." 
-                    className="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none w-full sm:w-80" 
+                    placeholder="Buscar..." 
+                    className="pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-100 outline-none w-full sm:w-64" 
                     value={searchTerm} 
                     onChange={(e) => setSearchTerm(e.target.value)} 
                 />
@@ -113,19 +113,16 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
         </div>
       </div>
       
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-100">
+      {/* Tabla sin Scroll Horizontal */}
+      <div className="w-full">
+        <table className="w-full table-fixed divide-y divide-gray-100">
           <thead>
             <tr className="bg-gray-50/50">
-              <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Fecha</th>
-              <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Encargado</th>
-              <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Empresa</th>
-              <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Rubro</th>
-              <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Dirección</th>
-              <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Estado</th>
-              <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Contacto</th>
-              <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Contactado</th>
-              <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Acciones</th>
+              <th className="w-[25%] px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Información</th>
+              <th className="w-[25%] px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Detalles</th>
+              <th className="w-[15%] px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Estado</th>
+              <th className="w-[15%] px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto</th>
+              <th className="w-[20%] px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Acciones</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-50">
@@ -137,66 +134,103 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
 
                   return (
                     <tr key={record.id} className="hover:bg-gray-50/80 transition-colors group">
-                        <td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-gray-500">
-                            {record.date}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 uppercase">
-                                    {record.inCharge.charAt(0)}
+                        {/* Columna 1: Empresa + Rubro */}
+                        <td className="px-6 py-4 overflow-hidden">
+                            <div className="flex flex-col gap-1 min-w-0">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <Building2 size={12} className="text-gray-400 shrink-0" />
+                                    <span className="text-xs font-black text-slate-800 truncate" title={record.company}>
+                                        {record.company}
+                                    </span>
                                 </div>
-                                <span className="text-xs font-bold text-gray-700">{record.inCharge}</span>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <Tag size={10} className="text-blue-500 shrink-0" />
+                                    <span className="text-[10px] font-bold text-blue-600 uppercase truncate">
+                                        {record.industry}
+                                    </span>
+                                </div>
                             </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs font-black text-slate-800">
-                            {record.company}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-0.5 rounded-md border border-blue-100 uppercase">
-                                {record.industry}
-                            </span>
-                        </td>
-                        <td className="px-6 py-4">
-                            <div className="text-xs font-medium text-gray-500 max-w-[200px] truncate" title={record.address}>
-                                {record.address}
+
+                        {/* Columna 2: Ubicación + Encargado */}
+                        <td className="px-6 py-4 overflow-hidden">
+                            <div className="flex flex-col gap-1 min-w-0">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <MapPin size={12} className="text-gray-400 shrink-0" />
+                                    <span className="text-[11px] font-medium text-gray-500 truncate" title={record.address}>
+                                        {record.address}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <UserIcon size={12} className="text-gray-400 shrink-0" />
+                                    <span className="text-[10px] font-bold text-slate-600 truncate">
+                                        {record.inCharge} • <span className="text-gray-400 font-medium">{record.date}</span>
+                                    </span>
+                                </div>
                             </div>
                         </td>
+
+                        {/* Columna 3: Estado */}
                         <td className="px-6 py-4 text-center whitespace-nowrap">
-                            <span className={`px-3 py-1 inline-flex text-[10px] font-black rounded-lg border-2 uppercase tracking-tight ${getStatusStyle(record.sold as string)}`}>
+                            <span className={`px-2.5 py-1 inline-flex text-[9px] font-black rounded-lg border-2 uppercase tracking-tight ${getStatusStyle(record.sold as string)}`}>
                                 {displayStatus}
                             </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-gray-600">
-                            {record.contactInfo}
+
+                        {/* Columna 4: Contacto */}
+                        <td className="px-6 py-4 overflow-hidden">
+                            <div className="flex items-center gap-2 min-w-0">
+                                {hasContact ? (
+                                    <>
+                                        <button 
+                                            onClick={() => openWhatsApp(record.contactInfo)} 
+                                            className="w-7 h-7 bg-[#25D366] text-white rounded-lg shrink-0 flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+                                            title="WhatsApp"
+                                        >
+                                            <MessageCircle size={14} fill="white" />
+                                        </button>
+                                        <span className="text-[11px] font-bold text-gray-600 truncate" title={record.contactInfo}>
+                                            {record.contactInfo}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <span className="text-[10px] text-gray-300 italic">Sin contacto</span>
+                                )}
+                            </div>
                         </td>
-                        <td className="px-6 py-4 text-center">
-                            <button
-                                onClick={() => toggleContacted(record)}
-                                disabled={!allowed}
-                                className={`inline-flex items-center justify-center w-7 h-7 rounded-lg border transition-all ${
-                                    record.contacted === 'Si'
-                                    ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100'
-                                    : 'bg-white border-gray-200 text-gray-200 hover:border-gray-300'
-                                }`}
-                            >
-                                {record.contacted === 'Si' ? <Check size={14} strokeWidth={4} /> : <X size={12} strokeWidth={3} />}
-                            </button>
-                        </td>
-                        <td className="px-6 py-4">
-                           <div className="flex items-center justify-end gap-2">
-                               {hasContact && (
-                                   <button 
-                                       onClick={() => openWhatsApp(record.contactInfo)} 
-                                       className="w-8 h-8 bg-[#25D366] text-white rounded-lg hover:scale-110 transition-transform shadow-sm flex items-center justify-center"
-                                       title="Enviar WhatsApp"
-                                   >
-                                       <MessageCircle size={16} fill="white" />
-                                   </button>
-                               )}
+
+                        {/* Columna 5: Gestión (Check + Edit + Trash) */}
+                        <td className="px-6 py-4 text-right">
+                           <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                    onClick={() => toggleContacted(record)}
+                                    disabled={!allowed}
+                                    className={`inline-flex items-center justify-center w-7 h-7 rounded-lg border transition-all shrink-0 ${
+                                        record.contacted === 'Si'
+                                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                                        : 'bg-white border-gray-200 text-gray-200 hover:border-gray-300'
+                                    }`}
+                                    title={record.contacted === 'Si' ? "Contactado" : "Pendiente de contacto"}
+                                >
+                                    {record.contacted === 'Si' ? <Check size={14} strokeWidth={4} /> : <X size={12} strokeWidth={3} />}
+                                </button>
+                                
                                {allowed && (
-                                   <div className="flex gap-1">
-                                       <button onClick={() => onEdit(record)} className="p-1.5 text-blue-400 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors" title="Editar"><Edit2 size={14} /></button>
-                                       <button onClick={() => onDelete(record.id)} className="p-1.5 text-red-300 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors" title="Eliminar"><Trash2 size={14} /></button>
+                                   <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                       <button 
+                                            onClick={() => onEdit(record)} 
+                                            className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg"
+                                            title="Editar"
+                                        >
+                                            <Edit2 size={14} />
+                                        </button>
+                                       <button 
+                                            onClick={() => onDelete(record.id)} 
+                                            className="p-1.5 text-red-300 hover:bg-red-50 rounded-lg"
+                                            title="Borrar"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
                                    </div>
                                )}
                            </div>
@@ -206,10 +240,10 @@ export const SalesTable: React.FC<SalesTableProps> = ({ records, currentUser, on
                 })
             ) : (
                 <tr>
-                    <td colSpan={9} className="px-6 py-16 text-center">
+                    <td colSpan={5} className="px-6 py-12 text-center">
                         <div className="flex flex-col items-center gap-2 opacity-30">
-                            <LayoutGrid size={48} />
-                            <p className="text-sm font-black uppercase tracking-widest italic">Sin resultados</p>
+                            <LayoutGrid size={40} />
+                            <p className="text-xs font-black uppercase tracking-widest italic">No se encontraron resultados</p>
                         </div>
                     </td>
                 </tr>

@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { SalesStat } from '../types';
 import { TrendingUp, Trophy, Sparkles, Medal, Target, Award, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
@@ -11,11 +10,9 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
   const [hoveredUser, setHoveredUser] = useState<string | null>(null);
 
   const TIERS = [
-    { range: '0', percentage: '0%' },
-    { range: '1 - 4', percentage: '10%' },
-    { range: '5 - 9', percentage: '15%' },
-    { range: '10 - 14', percentage: '20%' },
-    { range: '15 o más', percentage: '25%' },
+    { range: '0 - 45', percentage: '0%' },
+    { range: '45 - 59', percentage: '10%' },
+    { range: '60 o más', percentage: '25%' },
   ];
 
   const sortedStats = useMemo(() => {
@@ -246,7 +243,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats }) => {
             </div>
             <h4 className="text-[10px] font-black text-indigo-700 uppercase mb-3 tracking-widest relative z-10">Meta del mes</h4>
             <p className="text-sm text-indigo-900 leading-relaxed font-medium relative z-10">
-              Superar los <span className="font-black text-indigo-700">15 registros</span> te garantiza el máximo de comisión (25%). ¡No te detengas!
+              Superar los <span className="font-black text-indigo-700">60 registros</span> te garantiza el máximo de comisión (25%). ¡No te detengas!
             </p>
           </div>
         </div>
